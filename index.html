@@ -373,7 +373,7 @@
         .cardValentine.active {
             position: absolute;
             top: 50%;
-            left: 1%;
+            left: 2%;
             opacity: 1;
             transform: translate(-50%, -50%);
             height: 600px;
@@ -550,7 +550,7 @@
 
         .cardValentine.active.open {
             top: 50%;
-            left: 1%;
+            left: 2%;
             transform: translate(-50%, -50%);
             transition: .5s;
 
@@ -705,22 +705,59 @@
     <div class="music-control" id="musicControl">🔊 Tắt nhạc</div>
 
     <script>
-        // Thay đổi nội dung búc thư ở đây
+        // Thay đổi nội dung bức thư ở đây
         var letterContent = "Ngay lúc này, tụi mình muốn gửi đến mấy bạn nam A13 đôi lời. Sau một quãng thời gian học với nhau, chơi với nhau, tham gia hoạt động cùng nhau và trải qua bao nhiêu thăng trầm thì đến đây cũng là gần kết thúc năm học ròi. Nói đúng ra thì mình đã học với nhau được gần 1 năm học nên đến hiện tại tụi mình hiểu được từng bạn một có tính cách như thế nào nè. Có đôi lúc tụi mình cũng gắt gỏng với mấy bạn nam (lúc tham gia hoạt động), nhưng tụi mình hiểu mấy bạn nam cũng đã cố gắng làm tốt hết sức ròi. Tụi mình hy vọng năm tới các bạn nam sẽ cùng tụi mình troáy hết sức để đưa 10/13 chạm đến nhiều cột mốc mới nhen. À tụi mình sẽ nói chút chút về món quà mà tụi mình tặng. Sau khi đưa ra rất nhìu ý kiến và suy nghĩ rất nhìu, cúi cùng tụi mình đã chọn tự tay làm ra mấy cái bánh xinh xinh nho nhỏ này với hy vọng mấy bạn nam sẽ ăn ngon mịn, tuy hong chuyên nghiệp như tiệm nhưng với tất cả sự chân thành thì tụi mình tin là mấy bạn nam sẽ thích😋"
 
-        // Tốc độ viết chữ. Số càng nhỏ tốc độ càng nhanh. 50 là tốc độ khá phù hợp
+        // Tốc độ viết chữ
         durationWrite = 50
+        
+        // Biến để kiểm tra trạng thái
+        let isWriting = false;
+        let isFirstOpen = true;
+        let timeoutIds = [];
 
         // Hiệu ứng gõ chữ
         function effectWrite() {
-            var boxLetter = document.querySelector(".letterContent")
-            letterContentSplited = letterContent.split("")
+            var boxLetter = document.querySelector(".letterContent");
+            
+            // Nếu đang viết thì không làm gì
+            if (isWriting) return;
+            
+            // Nếu là lần đầu mở
+            if (isFirstOpen) {
+                boxLetter.innerHTML = "";
+                isFirstOpen = false;
+            }
+            
+            // Bắt đầu viết
+            isWriting = true;
+            let currentPos = boxLetter.innerHTML.length;
+            
+            // Nếu đã viết hết thì không làm gì
+            if (currentPos >= letterContent.length) {
+                isWriting = false;
+                return;
+            }
+            
+            // Viết từng ký tự
+            for (let i = currentPos; i < letterContent.length; i++) {
+                const timeoutId = setTimeout(() => {
+                    boxLetter.innerHTML += letterContent[i];
+                    
+                    // Nếu viết xong
+                    if (i === letterContent.length - 1) {
+                        isWriting = false;
+                    }
+                }, durationWrite * (i - currentPos));
+                
+                timeoutIds.push(timeoutId);
+            }
+        }
 
-            letterContentSplited.forEach((val, index) => {
-                setTimeout(() => {
-                    boxLetter.innerHTML += val
-                }, durationWrite * index)
-            })
+        // Hàm xóa tất cả timeout
+        function clearAllTimeouts() {
+            timeoutIds.forEach(id => clearTimeout(id));
+            timeoutIds = [];
         }
 
         window.addEventListener("load", () => {
@@ -757,15 +794,19 @@
 
         var cardValentine = document.querySelector(".cardValentine")
 
-        cardValentine.addEventListener("click", () => {
+        cardValentine.addEventListener("click", (e) => {
+            // Nếu đang viết chữ thì không cho đóng thiệp
+            if (isWriting) {
+                e.stopPropagation();
+                return;
+            }
+            
             cardValentine.classList.toggle("open")
 
             if (cardValentine.className.indexOf("open") != -1) {
                 setTimeout(effectWrite, 500)
             } else {
-                setTimeout(() => {
-                    document.querySelector(".letterContent").innerHTML = ""
-                }, 1000)
+                clearAllTimeouts();
             }
         })
     </script>
